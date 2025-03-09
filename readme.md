@@ -1,4 +1,13 @@
+## start mcp gateway
 
+```shell
+
+git clone https://github.com/daodao97/mcp-geteway.git
+
+cd mcp-dateway
+
+docker compose up 
+```
 
 ## usage
 
