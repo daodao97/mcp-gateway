@@ -2,7 +2,7 @@
 
 ```shell
 
-git clone https://github.com/daodao97/mcp-geteway.git
+git clone https://github.com/daodao97/mcp-gateway.git
 
 cd mcp-gateway
 
