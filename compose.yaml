@@ -1,0 +1,19 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    depends_on:
+      - weather
+    extra_hosts:
+      - "localhost:127.0.0.1"
+    network_mode: "host"
+  weather:
+    build:
+      context: ./servers/weather
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    network_mode: "host"
