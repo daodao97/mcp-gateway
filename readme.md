@@ -4,7 +4,7 @@
 
 git clone https://github.com/daodao97/mcp-geteway.git
 
-cd mcp-dateway
+cd mcp-gateway
 
 docker compose up 
 ```
