@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -41,8 +40,6 @@ func main() {
 }
 
 func getWeatherHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	requestString, _ := json.Marshal(request)
-	fmt.Println("getWeatherHandler", string(requestString))
 	city, ok := request.Params.Arguments["city"].(string)
 	if !ok {
 		return mcp.NewToolResultError("city must be a string"), nil
