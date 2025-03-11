@@ -36,7 +36,7 @@ func main() {
 		server.WithSSEEndpoint("/sse"),
 	)
 
-	port := getEnv("MCP_GATEWAY_PORT", "8080")
+	port := getEnv("MCP_SERVER_PORT", "8080")
 
 	if err := _s.Start(":" + port); err != nil {
 		fmt.Printf("Server error: %v\n", err)
