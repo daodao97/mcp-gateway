@@ -27,15 +27,23 @@ type TavilySearchResp struct {
 	Results []TavilySearchResult `json:"results"`
 }
 
-func TavilySearch(req *TavilySearchReq) (*TavilySearchResp, error) {
+func TavilySearch(req *TavilySearchReq, key string) (*TavilySearchResp, error) {
 	if req.Query == "" {
 		return nil, fmt.Errorf("搜索查询词不能为空")
+	}
+
+	if key == "" {
+		key = TavilySearchAPIKey
+	}
+
+	if key == "" {
+		return nil, fmt.Errorf("tavily api key is empty")
 	}
 
 	resp, err := xrequest.New().
 		SetHeader("Content-Type", "application/json").
 		SetBody(map[string]interface{}{
-			"api_key":      TavilySearchAPIKey,
+			"api_key":      key,
 			"query":        req.Query,
 			"search_depth": "basic",
 			"max_results":  10,

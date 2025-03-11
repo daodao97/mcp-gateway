@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/daodao97/xgo/xrequest"
+	"github.com/daodao97/xgo/xutil"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -42,7 +43,9 @@ func main() {
 
 	fmt.Printf("Server started on port %s\n", port)
 
-	regMcpServerToGateway(port)
+	xutil.Go(context.Background(), func() {
+		regMcpServerToGateway(port)
+	})
 
 	if err := _s.Start(":" + port); err != nil {
 		fmt.Printf("Server error: %v\n", err)
@@ -50,14 +53,22 @@ func main() {
 }
 
 func webSearchHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	fmt.Printf("request: %+v\n", request)
 	query, ok := request.Params.Arguments["query"].(string)
 	if !ok {
 		return mcp.NewToolResultError("query must be a string"), nil
 	}
 
+	session := server.SessionStoreFromCtx(ctx)
+	if session == nil {
+		return mcp.NewToolResultError("sessionId not found"), nil
+	}
+
+	tavilyKey := session.Get("tavily_api_key")
+
 	resp, err := TavilySearch(&TavilySearchReq{
 		Query: query,
-	})
+	}, tavilyKey)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}

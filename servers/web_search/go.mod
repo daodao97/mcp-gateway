@@ -7,6 +7,10 @@ require (
 	github.com/mark3labs/mcp-go v0.12.0
 )
 
+replace github.com/mark3labs/mcp-go => github.com/daodao97/mcp-go v0.0.0-20250311053828-48a2596da6ab
+
+// replace github.com/mark3labs/mcp-go => /Users/daodao/work/github/mcp/mcp-go
+
 require (
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
