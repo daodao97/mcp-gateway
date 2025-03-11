@@ -5,15 +5,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - 3000:3000
-    depends_on:
-      - weather
     extra_hosts:
       - "localhost:127.0.0.1"
     network_mode: "host"
-  weather:
+  web_search:
     build:
-      context: ./servers/weather
+      context: ./servers/web_search
       dockerfile: Dockerfile
     ports:
       - 8080:8080
+    environment:
+      - TAVILY_SEARCH_API_KEY=${TAVILY_SEARCH_API_KEY}
     network_mode: "host"

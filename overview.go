@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/daodao97/xgo/xlog"
@@ -13,6 +15,8 @@ import (
 )
 
 type ServerInfo struct {
+	Type      string                   `json:"type"`
+	Url       string                   `json:"url"`
 	Info      *mcp.InitializeResult    `json:"info,omitempty"`
 	Prompt    *mcp.GetPromptResult     `json:"prompt,omitempty"`
 	Tools     *mcp.ListToolsResult     `json:"tools,omitempty"`
@@ -90,13 +94,19 @@ func getServerInfo(serverUrl string) (*ServerInfo, error) {
 }
 
 func Overview(w http.ResponseWriter, r *http.Request) {
+	domain := os.Getenv("MCP_GATEWAY_DOMAIN")
+	if domain == "" {
+		domain = "http://localhost:3000"
+	}
 	var serverInfos []*ServerInfo
-	for _, serveUrl := range routeMap {
+	for prefix, serveUrl := range routeMap {
 		serverInfo, err := getServerInfo(serveUrl)
 		if err != nil {
 			xlog.Error("Failed to get server info", xlog.String("serverUrl", serveUrl), xlog.Err(err))
 			continue
 		}
+		serverInfo.Type = "sse"
+		serverInfo.Url = fmt.Sprintf("%s%s/sse", domain, prefix)
 		serverInfos = append(serverInfos, serverInfo)
 	}
 

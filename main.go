@@ -17,7 +17,7 @@ const prefixKey contextKey = "prefix"
 const sourceURLKey contextKey = "sourceURL"
 
 var routeMap = map[string]string{
-	"/weather": "http://localhost:8080/sse",
+	"/web_search": "http://localhost:8080/sse",
 }
 
 func getEnv(key, fallback string) string {
