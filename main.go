@@ -63,15 +63,17 @@ func main() {
 		log.Printf("路由 %s/* 将转发到 %s", prefix, targetURL.String())
 	}
 
+	port := getEnv("MCP_GATEWAY_PORT", "3121")
+
 	// 设置服务器
 	server := &http.Server{
-		Addr:         ":3000",
+		Addr:         ":" + port,
 		Handler:      mux,
 		ReadTimeout:  5 * time.Minute,
 		WriteTimeout: 0, // SSE 需要无限写入超时
 	}
 
 	// 启动服务器
-	log.Println("反向代理服务器启动在 :3000")
+	log.Printf("反向代理服务器启动在 :%s", port)
 	log.Fatal(server.ListenAndServe())
 }

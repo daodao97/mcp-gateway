@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -34,10 +35,12 @@ func main() {
 		server.WithMessageEndpoint("/message"),
 		server.WithSSEEndpoint("/sse"),
 	)
-	if err := _s.Start(":8080"); err != nil {
+
+	port := getEnv("MCP_GATEWAY_PORT", "8080")
+
+	if err := _s.Start(":" + port); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
-
 }
 
 func webSearchHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -65,4 +68,11 @@ func webSearchHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	}
 
 	return mcp.NewToolResultText(strings.Join(results, "\n---\n")), nil
+}
+
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
 }
