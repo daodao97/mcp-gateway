@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/daodao97/xgo/xrequest"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -29,14 +31,18 @@ func main() {
 	// Add tool handler
 	s.AddTool(tool, webSearchHandler)
 
+	port := getEnv("MCP_SERVER_PORT", "8080")
+
 	_s := server.NewSSEServer(
 		s,
-		server.WithBaseURL("http://localhost:8080"),
+		server.WithBaseURL("http://localhost:"+port),
 		server.WithMessageEndpoint("/message"),
 		server.WithSSEEndpoint("/sse"),
 	)
 
-	port := getEnv("MCP_SERVER_PORT", "8080")
+	fmt.Printf("Server started on port %s\n", port)
+
+	regMcpServerToGateway(port)
 
 	if err := _s.Start(":" + port); err != nil {
 		fmt.Printf("Server error: %v\n", err)
@@ -75,4 +81,20 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func regMcpServerToGateway(port string) {
+	gatewayUrl := getEnv("MCP_GATEWAY_DOMAIN", "http://localhost:3121")
+	resp, err := xrequest.New().
+		SetBody(map[string]any{
+			"server_name": "web_search",
+			"server_url":  "http://localhost:" + port + "/sse",
+		}).
+		SetRetry(30, 10*time.Second).
+		Post(gatewayUrl + "/register")
+	if err != nil {
+		fmt.Printf("Failed to register MCP server to gateway: %v\n", err)
+	}
+
+	fmt.Printf("MCP server registered to gateway: %v\n", resp)
 }
