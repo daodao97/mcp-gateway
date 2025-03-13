@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -15,12 +15,12 @@ import (
 )
 
 type ServerInfo struct {
-	Type      string                   `json:"type"`
-	Url       string                   `json:"url"`
-	Info      *mcp.InitializeResult    `json:"info,omitempty"`
-	Prompt    *mcp.GetPromptResult     `json:"prompt,omitempty"`
-	Tools     *mcp.ListToolsResult     `json:"tools,omitempty"`
-	Resources *mcp.ListResourcesResult `json:"resources,omitempty"`
+	Type      string                `json:"type"`
+	Url       string                `json:"url"`
+	Info      *mcp.InitializeResult `json:"info,omitempty"`
+	Prompt    []mcp.PromptMessage   `json:"prompt,omitempty"`
+	Tools     []mcp.Tool            `json:"tools,omitempty"`
+	Resources []mcp.Resource        `json:"resources,omitempty"`
 }
 
 func getServerInfo(serverUrl string) (*ServerInfo, error) {
@@ -85,33 +85,60 @@ func getServerInfo(serverUrl string) (*ServerInfo, error) {
 
 	xlog.Info("GetPrompt result", xlog.Any("result", promptResult))
 
-	return &ServerInfo{
-		Info:      result,
-		Prompt:    promptResult,
-		Tools:     toolsResult,
-		Resources: resourcesResult,
-	}, nil
+	info := &ServerInfo{
+		Info: result,
+	}
+	if promptResult != nil {
+		info.Prompt = promptResult.Messages
+	}
+	if toolsResult != nil {
+		info.Tools = toolsResult.Tools
+	}
+	if resourcesResult != nil {
+		info.Resources = resourcesResult.Resources
+	}
+
+	return info, nil
 }
 
 func Overview(w http.ResponseWriter, r *http.Request) {
 	domain := os.Getenv("MCP_GATEWAY_DOMAIN")
 	if domain == "" {
-		domain = "http://localhost:3000"
+		domain = "http://localhost:3121"
 	}
-	var serverInfos []*ServerInfo
+
+	_domain, err := url.Parse(domain)
+	if err != nil {
+		xlog.Error("Failed to parse domain", xlog.String("domain", domain), xlog.Err(err))
+		return
+	}
+
 	for prefix, serveUrl := range routeMap {
+		if _, ok := serverInfoMap[prefix]; ok {
+			continue
+		}
 		serverInfo, err := getServerInfo(serveUrl)
 		if err != nil {
 			xlog.Error("Failed to get server info", xlog.String("serverUrl", serveUrl), xlog.Err(err))
 			continue
 		}
+
+		_severUrl, err := url.Parse(serveUrl)
+		if err != nil {
+			xlog.Error("Failed to parse server url", xlog.String("serverUrl", serveUrl), xlog.Err(err))
+			continue
+		}
+
+		_severUrl.Scheme = _domain.Scheme
+		_severUrl.Host = _domain.Host
+		_severUrl.Path = prefix + _severUrl.Path
 		serverInfo.Type = "sse"
-		serverInfo.Url = fmt.Sprintf("%s%s/sse", domain, prefix)
-		serverInfos = append(serverInfos, serverInfo)
+		serverInfo.Url = _severUrl.String()
+		serverInfoMap[prefix] = serverInfo
 	}
 
 	// response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(serverInfos)
+	json.NewEncoder(w).Encode(serverInfoMap)
 }

@@ -22,9 +22,10 @@ const sourceURLKey contextKey = "sourceURL"
 
 // 添加互斥锁以保护 routeMap
 var (
-	routeMap     = map[string]string{}
-	routeMapLock = sync.RWMutex{}
-	proxyMap     = map[string]http.Handler{}
+	routeMap      = map[string]string{}
+	routeMapLock  = sync.RWMutex{}
+	proxyMap      = map[string]http.Handler{}
+	serverInfoMap = map[string]*ServerInfo{}
 )
 
 func getEnv(key, fallback string) string {
